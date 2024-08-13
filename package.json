@@ -1,6 +1,10 @@
 {
   "name": "app-panorama-fixer",
   "private": true,
+  "repository": {
+    "url": "https://github.com/PlayXman/app-panorama-fixer",
+    "type": "git"
+  },
   "type": "module",
   "scripts": {
     "build": "nuxt build",
