@@ -11,7 +11,8 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "deploy": "firebase deploy"
   },
   "dependencies": {
     "exifr": "^7.1.3",

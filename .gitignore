@@ -17,6 +17,8 @@ logs
 .DS_Store
 .fleet
 .idea
+.firebaserc
+.firebase
 
 # Local env files
 .env
