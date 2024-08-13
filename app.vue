@@ -5,6 +5,7 @@ useHead({
 </script>
 
 <template>
+  <NuxtPwaManifest />
   <div class="container">
     <h1>XMP Panorama Fixer</h1>
     <p>The app repairs the XMP metadata on images, so they can be displayed as panorama pictures in Google Photos and other photo apps.</p>
