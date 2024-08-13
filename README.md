@@ -1,75 +1,23 @@
-# Nuxt 3 Minimal Starter
+# XMP Panorama Fixer
 
+Some photo camera apps (e.g. Samsung native camera app) do not set the correct metadata for panorama pictures, which causes them to be displayed as either regular or spherical pictures in Google Photos. This app fixes the metadata so the panorama pictures are displayed correctly.
+
+Live app can be visited at https://aa-panorama-fixer.web.app/.
+
+## Development
 Look at the [Nuxt 3 documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
 
-## Setup
-
-Make sure to install the dependencies:
-
+#### Run development server
 ```bash
-# npm
-npm install
-
-# pnpm
-pnpm install
-
-# yarn
-yarn install
-
-# bun
-bun install
-```
-
-## Development Server
-
-Start the development server on `http://localhost:3000`:
-
-```bash
-# npm
 npm run dev
-
-# pnpm
-pnpm run dev
-
-# yarn
-yarn dev
-
-# bun
-bun run dev
 ```
 
-## Production
-
-Build the application for production:
-
+#### Build for production
 ```bash
-# npm
-npm run build
-
-# pnpm
-pnpm run build
-
-# yarn
-yarn build
-
-# bun
-bun run build
+npm run generate
 ```
 
-Locally preview production build:
-
+#### Deploy production build
 ```bash
-# npm
-npm run preview
-
-# pnpm
-pnpm run preview
-
-# yarn
-yarn preview
-
-# bun
-bun run preview
+npm run deploy
 ```
-
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
