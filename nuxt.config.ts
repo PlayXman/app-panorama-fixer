@@ -15,22 +15,20 @@ export default defineNuxtConfig({
       theme_color: '#008B8B',
       icons: [
         {
-          src: 'pwa-192x192.png',
-          sizes: '192x192',
-          type: 'image/png',
+          purpose: "maskable",
+          sizes: "512x512",
+          src: "icon512_maskable.png",
+          type: "image/png"
         },
         {
-          src: 'pwa-512x512.png',
-          sizes: '512x512',
-          type: 'image/png',
-        },
-        {
-          src: 'pwa-512x512.png',
-          sizes: '512x512',
-          type: 'image/png',
-          purpose: 'any maskable',
-        },
+          purpose: "any",
+          sizes: "512x512",
+          src: "icon512_rounded.png",
+          type: "image/png"
+        }
       ],
+      display: "standalone",
+      lang: "en",
     },
     workbox: {
       globPatterns: ['**/*.{js,css,html,ico,png,svg}']
