@@ -3,11 +3,12 @@ import {getImageSize} from "~/utils/file";
 import {GPano} from "~/utils/GPano";
 import {ImageSize} from "~/utils/ImageSize";
 import DisplayGPano from "~/components/DisplayGPano.vue";
-import {createRecommendedGPano, parseGPanoXmp, updateGPanoXmp} from "~/utils/metadata";
+import {createRecommendedGPano, extractGPanoXmp, updateGPanoXmp} from "~/utils/metadata";
+import {XmpXml} from "~/utils/XmpXml";
 
 const originalFile = ref<File | null>(null);
 const originalImageSize = ref(new ImageSize());
-const originalXmp = ref(new ImageSize());
+const originalXmpXml = ref<XmpXml | null>(null);
 const originalGPano = ref(new GPano());
 const recommendedGPano = ref(new GPano());
 const nextGPano = ref(new GPano());
@@ -25,9 +26,9 @@ async function handleFileChange(event: Event) {
   URL.revokeObjectURL(nextImageFileUrl.value);
   nextImageFileUrl.value = '';
 
-  const xmp = await parseGPanoXmp(file);
-  originalXmp.value = xmp.xmpXml;
-  originalGPano.value = xmp.gPano;
+  const xmpXml = await extractGPanoXmp(file);
+  originalXmpXml.value = xmpXml;
+  originalGPano.value = xmpXml.toGPano();
   const imageSize = await getImageSize(file);
   originalImageSize.value = imageSize;
   const preferredPano = createRecommendedGPano(imageSize);
@@ -47,11 +48,11 @@ function handleResetToRecommended() {
 }
 
 async function handleUpdateImageMetadata() {
-  if (originalFile.value == null) {
+  if (originalFile.value == null || originalXmpXml.value == null) {
     return;
   }
 
-  const updatedFile = await updateGPanoXmp(originalFile.value, originalXmp.value, nextGPano.value);
+  const updatedFile = await updateGPanoXmp(originalFile.value, originalXmpXml.value, nextGPano.value);
   nextImageFileUrl.value = URL.createObjectURL(updatedFile);
 }
 </script>
