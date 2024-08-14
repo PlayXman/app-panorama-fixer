@@ -3,13 +3,14 @@ import {GPano} from "~/utils/GPano";
 import {XMLBuilder, XMLParser} from "fast-xml-parser";
 import {getMimeType, writeXMP} from "image-metadata-editor";
 import {ImageSize} from "~/utils/ImageSize";
+import {XmpXml} from "~/utils/XmpXml";
 
 /**
  * Parse the GPano XMP metadata of a file.
  * @param {File} file
- * @return {Promise<{xmpXml: any; gPano: GPano}>}
+ * @return {Promise<XmpXml>}
  */
-export async function parseGPanoXmp(file) {
+export async function extractGPanoXmp(file) {
   // Supports only JPEG files.
   if (await getMimeType(file) !== 'image/jpeg') {
     throw new Error('Not a JPEG file');
@@ -29,33 +30,13 @@ export async function parseGPanoXmp(file) {
   }
 
   // Parse the XMP metadata.
-  const xmlParser = new XMLParser();
+  const xmlParser = new XMLParser({
+    ignoreAttributes: false,
+    attributeNamePrefix: '',
+  });
   const xmpXmlDoc = xmlParser.parse(originalXmp);
-  const rdfDescription = xmpXmlDoc?.['x:xmpmeta']?.['rdf:RDF']?.['rdf:Description'];
 
-  if(rdfDescription == null) {
-    throw new Error('XMP metadata is not in the expected format');
-  }
-
-  const gPano = rdfDescription.find((item) => {
-    return Object.keys(item).some((key) => key.startsWith('GPano:'));
-  }) ?? {};
-
-  // Create result.
-  const currentGPano = new GPano();
-  currentGPano.UsePanoramaViewer = gPano['GPano:UsePanoramaViewer'] ?? '';
-  currentGPano.ProjectionType = gPano['GPano:ProjectionType'] ?? '';
-  currentGPano.FullPanoWidthPixels = gPano['GPano:FullPanoWidthPixels'] ?? 0;
-  currentGPano.FullPanoHeightPixels = gPano['GPano:FullPanoHeightPixels'] ?? 0;
-  currentGPano.CroppedAreaImageWidthPixels = gPano['GPano:CroppedAreaImageWidthPixels'] ?? 0;
-  currentGPano.CroppedAreaImageHeightPixels = gPano['GPano:CroppedAreaImageHeightPixels'] ?? 0;
-  currentGPano.CroppedAreaLeftPixels = gPano['GPano:CroppedAreaLeftPixels'] ?? 0;
-  currentGPano.CroppedAreaTopPixels = gPano['GPano:CroppedAreaTopPixels'] ?? 0;
-
-  return {
-    xmpXml: xmpXmlDoc,
-    gPano: currentGPano
-  };
+  return new XmpXml(xmpXmlDoc);
 }
 
 /**
@@ -78,43 +59,23 @@ export function createRecommendedGPano(imageSize) {
 }
 
 /**
- *
+ * Create a new image file with updated XMP metadata.
  * @param {File} originalFile
- * @param {any} originalXmpXml
- * @param {GPano} nextGPano
+ * @param {XmpXml} xmpXml
+ * @param {GPano} nextGPano GPano with new values.
  * @return {Promise<File>} New file with updated XMP metadata.
  */
-export async function updateGPanoXmp(originalFile, originalXmpXml, nextGPano) {
-  let rdfDescription = originalXmpXml?.['x:xmpmeta']?.['rdf:RDF']?.['rdf:Description'];
+export async function updateGPanoXmp(originalFile, xmpXml, nextGPano) {
+  xmpXml.setGPano(nextGPano);
 
-  if(rdfDescription == null) {
-    throw new Error('XMP metadata is not in the expected format');
-  }
-
-  let gPano = rdfDescription.find((item) => {
-    return Object.keys(item).some((key) => key.startsWith('GPano:'));
+  const xmlBuilder = new XMLBuilder({
+    ignoreAttributes: false,
+    attributeNamePrefix: '',
   });
-
-  if (gPano == null) {
-    gPano = {};
-    rdfDescription.push(gPano);
-  }
-
-  // Set next values.
-  gPano['GPano:UsePanoramaViewer'] = nextGPano.UsePanoramaViewer;
-  gPano['GPano:ProjectionType'] = nextGPano.ProjectionType;
-  gPano['GPano:FullPanoWidthPixels'] = nextGPano.FullPanoWidthPixels;
-  gPano['GPano:FullPanoHeightPixels'] = nextGPano.FullPanoHeightPixels;
-  gPano['GPano:CroppedAreaImageWidthPixels'] = nextGPano.CroppedAreaImageWidthPixels;
-  gPano['GPano:CroppedAreaImageHeightPixels'] = nextGPano.CroppedAreaImageHeightPixels;
-  gPano['GPano:CroppedAreaLeftPixels'] = nextGPano.CroppedAreaLeftPixels;
-  gPano['GPano:CroppedAreaTopPixels'] = nextGPano.CroppedAreaTopPixels;
-
-  const xmlBuilder = new XMLBuilder();
-  const nextXmp = xmlBuilder.build(originalXmpXml);
+  const nextXmpString = xmlBuilder.build(xmpXml.fullXmpXml);
 
   // Generate new file.
-  const uint8Array = await writeXMP(originalFile, nextXmp);
+  const uint8Array = await writeXMP(originalFile, nextXmpString);
   const filename = `${originalFile.name.split('.')[0]}-p.jpg`
   return new File([uint8Array], filename, {type: 'image/jpeg'})
 }
