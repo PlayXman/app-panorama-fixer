@@ -58,7 +58,7 @@ async function handleUpdateImageMetadata() {
 
 <template>
   <h4>1. Select image you want to fix.</h4>
-  <input class="input" type="file" name="file" @change="handleFileChange"/>
+  <input class="input" type="file" name="file" accept="image/jpeg" @change="handleFileChange"/>
 
   <h4>2. Edit image metadata. The preset is usually fine.</h4>
   <DisplayGPano
