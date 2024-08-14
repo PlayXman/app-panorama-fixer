@@ -5,6 +5,7 @@ import {ImageSize} from "~/utils/ImageSize";
 import DisplayGPano from "~/components/DisplayGPano.vue";
 import {createRecommendedGPano, extractGPanoXmp, updateGPanoXmp} from "~/utils/metadata";
 import {XmpXml} from "~/utils/XmpXml";
+import DisplayErrors from "~/components/DisplayErrors.vue";
 
 const originalFile = ref<File | null>(null);
 const originalImageSize = ref(new ImageSize());
@@ -13,6 +14,18 @@ const originalGPano = ref(new GPano());
 const recommendedGPano = ref(new GPano());
 const nextGPano = ref(new GPano());
 const nextImageFileUrl = ref('');
+const errors = ref<Error | string | null>(null);
+
+function setErrors(error: unknown) {
+  switch (typeof error) {
+    case "object":
+    case "string":
+      errors.value = error as Error;
+      break;
+    default:
+      console.error(error);
+  }
+}
 
 async function handleFileChange(event: Event) {
   const target = event.target as HTMLInputElement;
@@ -25,15 +38,20 @@ async function handleFileChange(event: Event) {
   originalFile.value = file;
   URL.revokeObjectURL(nextImageFileUrl.value);
   nextImageFileUrl.value = '';
+  errors.value = null;
 
-  const xmpXml = await extractGPanoXmp(file);
-  originalXmpXml.value = xmpXml;
-  originalGPano.value = xmpXml.toGPano();
-  const imageSize = await getImageSize(file);
-  originalImageSize.value = imageSize;
-  const preferredPano = createRecommendedGPano(imageSize);
-  recommendedGPano.value = preferredPano;
-  nextGPano.value = preferredPano;
+  try {
+    const xmpXml = await extractGPanoXmp(file);
+    originalXmpXml.value = xmpXml;
+    originalGPano.value = xmpXml.toGPano();
+    const imageSize = await getImageSize(file);
+    originalImageSize.value = imageSize;
+    const preferredPano = createRecommendedGPano(imageSize);
+    recommendedGPano.value = preferredPano;
+    nextGPano.value = preferredPano;
+  } catch(error) {
+    setErrors(error);
+  }
 }
 
 function handleNextGPanoPropertyChange(key: keyof GPano, value: string | number) {
@@ -52,8 +70,12 @@ async function handleUpdateImageMetadata() {
     return;
   }
 
-  const updatedFile = await updateGPanoXmp(originalFile.value, originalXmpXml.value, nextGPano.value);
-  nextImageFileUrl.value = URL.createObjectURL(updatedFile);
+  try {
+    const updatedFile = await updateGPanoXmp(originalFile.value, originalXmpXml.value, nextGPano.value);
+    nextImageFileUrl.value = URL.createObjectURL(updatedFile);
+  } catch (error) {
+    setErrors(error);
+  }
 }
 </script>
 
@@ -62,6 +84,7 @@ async function handleUpdateImageMetadata() {
   <input class="input" type="file" name="file" accept="image/jpeg" @change="handleFileChange"/>
 
   <h4>2. Edit image metadata. The preset is usually fine.</h4>
+  <DisplayErrors :error="errors" />
   <DisplayGPano
       :on-next-value-change="handleNextGPanoPropertyChange"
       :next-g-pano="nextGPano"
